@@ -18,15 +18,17 @@ async def process_request(human: HumanRequest):
     # 1. Feeder step: Human → Structured
     structured = await feeder_process(human.request)
     # 2. Interpreter step: Structured → gittertalk (+ department)
-    gittertalk, department = await interpreter_process(structured, human.verbose)
+    verbose_level = human.verbose or 2
+    fallback_mode = human.fallback_mode or "adaptive"
+    gittertalk, department = await interpreter_process(structured, verbose_level)
     # 3. Department step: gittertalk → Final response
-    result = await handle_department(department, gittertalk, human.fallback_mode)
+    result = await handle_department(department, gittertalk, fallback_mode)
     return {
-        "gittertalk": gittertalk_to_string(gittertalk, human.verbose),
+        "gittertalk": gittertalk_to_string(gittertalk, verbose_level),
         "department": department,
         "result": result,
-        "fallback_mode": human.fallback_mode,
-        "verbose_level": human.verbose
+        "fallback_mode": fallback_mode,
+        "verbose_level": verbose_level
     }
 
 @app.get("/")
@@ -44,7 +46,7 @@ async def api_info():
     return {
         "api_name": "Transdepo API",
         "description": "Multi-stage AI processing pipeline",
-        "available_departments": ["travel", "summarize", "joke"],
+        "available_departments": ["travel", "news", "joke"],
         "fallback_modes": {
             "adaptive": "Creates new departments on the spot (default)",
             "strict": "Only handles requests for existing departments"
@@ -67,7 +69,7 @@ async def api_info():
                 "verbose": 2
             },
             {
-                "request": "Tell me about games",
+                "request": "Tell me about current events",
                 "fallback_mode": "strict",
                 "verbose": 4
             }

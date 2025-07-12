@@ -18,21 +18,23 @@ def gittertalk_to_string(gt: gittertalk, verbose_level: int = 2) -> str:
     if verbose_level == 1:
         # Traditional format
         base = f"act:{gt.act};obj:{gt.obj}"
-        for k, v in gt.params.items():
+        params = gt.params or {}
+        for k, v in params.items():
             base += f";{k}:{v}"
         return base
     
     elif verbose_level == 2:
         # Readable abbreviated format
         base = f"act:{gt.act};obj:{gt.obj}"
-        for k, v in gt.params.items():
+        params = gt.params or {}
+        for k, v in params.items():
             base += f";{k}:{v}"
         return base
     
     elif verbose_level == 3:
         # Symbolic abbreviated format
         action_map = {
-            'flight': 'f', 'hotel': 'h', 'car': 'c', 'summarize': 's',
+            'flight': 'f', 'hotel': 'h', 'car': 'c', 'news': 'n',
             'joke': 'j', 'translate': 't', 'book': 'b', 'reserve': 'r'
         }
         
@@ -49,7 +51,7 @@ def gittertalk_to_string(gt: gittertalk, verbose_level: int = 2) -> str:
     else:  # verbose_level == 4
         # Ultra-minimal symbolic format
         action_map = {
-            'flight': 'f', 'hotel': 'h', 'car': 'c', 'summarize': 's',
+            'flight': 'f', 'hotel': 'h', 'car': 'c', 'news': 'n',
             'joke': 'j', 'translate': 't', 'book': 'b', 'reserve': 'r'
         }
         

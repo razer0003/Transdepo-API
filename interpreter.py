@@ -19,7 +19,7 @@ async def interpreter_process(structured_prompt: str, verbose_level: int = 2) ->
         system_prompt = (
             "You are the Interpreter AI. Read the structured prompt and convert it to a compact, key-value gittertalk format: "
             "act:<action>;obj:<object>;param1:<value1>;param2:<value2>;... "
-            "After that, suggest which Department should handle the request. Available departments are: 'travel', 'summarize', 'joke'. "
+            "After that, suggest which Department should handle the request. Available departments are: 'travel', 'news', 'joke'. "
             "If the request doesn't clearly fit any of these, suggest the most relevant one or use 'other' if none apply."
             "\nRespond as:\ngittertalk:<gittertalk>\nDEPARTMENT:<department>"
         )
@@ -29,28 +29,28 @@ async def interpreter_process(structured_prompt: str, verbose_level: int = 2) ->
             "Use abbreviated keys like 'from', 'to', 'when', 'type', etc. Use underscores for multi-word values. "
             "Format: act:<action>;obj:<object>;key1:value1;key2:value2... "
             "Omit obvious words like 'find', 'get', 'available'. Use standard abbreviations. "
-            "Available departments: 'travel', 'summarize', 'joke'. "
+            "Available departments: 'travel', 'news', 'joke'. "
             "\nRespond as:\ngittertalk:<gittertalk>\nDEPARTMENT:<department>"
         )
     elif verbose_level == 3:
         system_prompt = (
             "You are the Interpreter AI. Convert to abbreviated gittertalk with symbols. "
             "Use symbols: > for direction/flow, + for time offsets, ? for queries, ! for negation, & for AND, | for OR. "
-            "Use single letters for common actions (f=flight, h=hotel, s=summarize, j=joke). "
+            "Use single letters for common actions (f=flight, h=hotel, n=news, j=joke). "
             "Use airport codes, abbreviations. Position matters - first item is usually source, second is destination. "
             "Format: <action>:<params_with_symbols> "
-            "Available departments: 'travel', 'summarize', 'joke'. "
+            "Available departments: 'travel', 'news', 'joke'. "
             "\nRespond as:\ngittertalk:<gittertalk>\nDEPARTMENT:<department>"
         )
     else:  # verbose_level == 4
         system_prompt = (
             "You are the Interpreter AI. Convert to ultra-minimal gittertalk using maximum symbolism and positional encoding. "
             "Use symbols heavily: > (to/direction), < (from), + (add/future), - (subtract/past), ? (query), ! (negate), & (and), | (or). "
-            "Single chars for actions: f(flight), h(hotel), c(car), s(summarize), j(joke), t(translate). "
+            "Single chars for actions: f(flight), h(hotel), c(car), n(news), j(joke), t(translate). "
             "Use codes: airport codes, ISO dates, standard abbreviations. "
             "Positional encoding: order implies meaning. Example: f:NYC>LAX+1? means 'flight from NYC to LAX tomorrow, check availability'. "
             "Omit ALL obvious words. Ultra-compact format. "
-            "Available departments: 'travel', 'summarize', 'joke'. "
+            "Available departments: 'travel', 'news', 'joke'. "
             "\nRespond as:\ngittertalk:<gittertalk>\nDEPARTMENT:<department>"
         )
     response = client.chat.completions.create(
@@ -155,7 +155,7 @@ def parse_symbolic_gittertalk(gittertalk_str: str, verbose_level: int):
         
         # Expand single-letter actions
         action_map = {
-            'f': 'flight', 'h': 'hotel', 'c': 'car', 's': 'summarize', 
+            'f': 'flight', 'h': 'hotel', 'c': 'car', 'n': 'news', 
             'j': 'joke', 't': 'translate', 'b': 'book', 'r': 'reserve'
         }
         
@@ -167,7 +167,7 @@ def parse_symbolic_gittertalk(gittertalk_str: str, verbose_level: int):
         # Determine object based on action
         obj_map = {
             'flight': 'Flight', 'hotel': 'Hotel', 'car': 'Car',
-            'summarize': 'Text', 'joke': 'Joke', 'translate': 'Text'
+            'news': 'News', 'joke': 'Joke', 'translate': 'Text'
         }
         obj = obj_map.get(act, 'Object')
         
