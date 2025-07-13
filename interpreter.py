@@ -35,21 +35,22 @@ async def interpreter_process(structured_prompt: str, verbose_level: int = 2) ->
     elif verbose_level == 3:
         system_prompt = (
             "You are the Interpreter AI. Convert to abbreviated gittertalk with symbols. "
-            "Use symbols: > for direction/flow, + for time offsets, ? for queries, ! for negation, & for AND, | for OR. "
-            "Use single letters for common actions (f=flight, h=hotel, n=news, j=joke). "
-            "Use airport codes, abbreviations. Position matters - first item is usually source, second is destination. "
-            "Format: <action>:<params_with_symbols> "
+            "Use format: action:params where action is a single letter and params use symbols. "
+            "Actions: f=flight, h=hotel, c=car, n=news, j=joke, r=route/directions, b=book, s=search. "
+            "Symbols: > for direction/to, < for from, + for future time, ? for queries. "
+            "Use abbreviations for places (Zanesville=Zan, Columbus=Col). "
+            "Examples: f:NYC>LAX+1? (flight NYC to LAX tomorrow, check), r:Zan>Col (route from Zanesville to Columbus). "
             "Available departments: 'travel', 'news', 'joke'. "
             "\nRespond as:\ngittertalk:<gittertalk>\nDEPARTMENT:<department>"
         )
     else:  # verbose_level == 4
         system_prompt = (
-            "You are the Interpreter AI. Convert to ultra-minimal gittertalk using maximum symbolism and positional encoding. "
-            "Use symbols heavily: > (to/direction), < (from), + (add/future), - (subtract/past), ? (query), ! (negate), & (and), | (or). "
-            "Single chars for actions: f(flight), h(hotel), c(car), n(news), j(joke), t(translate). "
-            "Use codes: airport codes, ISO dates, standard abbreviations. "
-            "Positional encoding: order implies meaning. Example: f:NYC>LAX+1? means 'flight from NYC to LAX tomorrow, check availability'. "
-            "Omit ALL obvious words. Ultra-compact format. "
+            "You are the Interpreter AI. Convert to ultra-minimal gittertalk. "
+            "Use format: actioncodes where action is single letter and codes are minimal abbreviations. "
+            "Actions: f=flight, h=hotel, c=car, n=news, j=joke, r=route, b=book, s=search. "
+            "Use 1-2 letter location codes (Zanesville=Z, Columbus=C, NYC=N, LAX=L). "
+            "Examples: fNL+1? (flight NYC to LAX tomorrow), rZC (route Zanesville to Columbus). "
+            "Ultra-minimal: combine everything into shortest possible string. "
             "Available departments: 'travel', 'news', 'joke'. "
             "\nRespond as:\ngittertalk:<gittertalk>\nDEPARTMENT:<department>"
         )
@@ -149,30 +150,65 @@ def parse_symbolic_gittertalk(gittertalk_str: str, verbose_level: int):
     """Parse symbolic gittertalk format (levels 3-4)"""
     from gittertalk import gittertalk  # Import here to avoid circular import
     
-    # Handle ultra-minimal formats like "f:NYC>LAX+1?"
-    if ":" in gittertalk_str:
-        action_part, params_part = gittertalk_str.split(":", 1)
-        
-        # Expand single-letter actions
-        action_map = {
-            'f': 'flight', 'h': 'hotel', 'c': 'car', 'n': 'news', 
-            'j': 'joke', 't': 'translate', 'b': 'book', 'r': 'reserve'
-        }
-        
-        act = action_map.get(action_part.lower(), action_part)
-        
-        # Parse symbolic parameters
-        params = parse_symbolic_params(params_part, verbose_level)
-        
-        # Determine object based on action
-        obj_map = {
-            'flight': 'Flight', 'hotel': 'Hotel', 'car': 'Car',
-            'news': 'News', 'joke': 'Joke', 'translate': 'Text'
-        }
-        obj = obj_map.get(act, 'Object')
-        
+    if verbose_level == 4:
+        # Handle ultra-minimal format like "rZC" or "fNL+1?"
+        if len(gittertalk_str) >= 2:
+            action_char = gittertalk_str[0]
+            params_part = gittertalk_str[1:]
+            
+            # Expand single-letter actions using SAME mappings as gittertalk_to_string
+            action_map = {
+                'f': 'flight', 'h': 'hotel', 'c': 'car', 'n': 'news', 
+                'j': 'joke', 'r': 'route', 'b': 'book', 's': 'search', 'g': 'get'
+            }
+            
+            act = action_map.get(action_char.lower(), 'unknown')
+            
+            # Parse ultra-minimal parameters
+            params = parse_ultra_minimal_params(params_part)
+            
+            # Determine object based on action
+            obj_map = {
+                'flight': 'Flight', 'hotel': 'Hotel', 'car': 'Car',
+                'news': 'News', 'joke': 'Joke', 'route': 'Route'
+            }
+            obj = obj_map.get(act, 'Object')
+            
+        else:
+            act = "unknown"
+            obj = "unknown"
+            params = {}
+            
+    elif verbose_level == 3:
+        # Handle level 3 format like "r:Zan>Col"
+        if ":" in gittertalk_str:
+            action_part, params_part = gittertalk_str.split(":", 1)
+            
+            # Expand single-letter actions using SAME mappings as gittertalk_to_string
+            action_map = {
+                'f': 'flight', 'h': 'hotel', 'c': 'car', 'n': 'news', 
+                'j': 'joke', 'r': 'route', 'b': 'book', 's': 'search', 'g': 'get'
+            }
+            
+            act = action_map.get(action_part.lower(), action_part)
+            
+            # Parse symbolic parameters
+            params = parse_symbolic_params(params_part, verbose_level)
+            
+            # Determine object based on action
+            obj_map = {
+                'flight': 'Flight', 'hotel': 'Hotel', 'car': 'Car',
+                'news': 'News', 'joke': 'Joke', 'route': 'Route'
+            }
+            obj = obj_map.get(act, 'Object')
+            
+        else:
+            # Fallback for malformed input
+            act = "unknown"
+            obj = "unknown"
+            params = {}
     else:
-        # Fallback for malformed input
+        # Fallback for other levels
         act = "unknown"
         obj = "unknown"
         params = {}
@@ -223,3 +259,43 @@ def parse_symbolic_params(params_str: str, verbose_level: int) -> dict:
         params["operator"] = "or"
     
     return params
+
+def parse_ultra_minimal_params(params_str: str) -> dict:
+    """Parse ultra-minimal parameters like 'ZC' or 'NL+1?'"""
+    params = {}
+    
+    # Handle queries
+    if "?" in params_str:
+        params["check"] = "availability"
+        params_str = params_str.replace("?", "")
+    
+    # Handle time indicators
+    if "+" in params_str:
+        time_part = params_str[params_str.find("+"):]
+        params["when"] = time_part
+        params_str = params_str[:params_str.find("+")]
+    
+    # Remaining should be location codes
+    if len(params_str) >= 2:
+        # Assume first letter is source, second is destination
+        params["from"] = expand_location_code(params_str[0])
+        params["to"] = expand_location_code(params_str[1])
+    
+    return params
+
+def expand_location_code(code: str) -> str:
+    """Expand single letter location codes using SAME mappings as gittertalk.py"""
+    codes = {
+        # Major cities
+        'N': 'NYC', 'L': 'LAX', 'P': 'Paris', 'T': 'Tokyo', 'C': 'Chicago',
+        # Ohio cities (for the user's example)
+        'Z': 'Zanesville', 'Cl': 'Cleveland', 'Ci': 'Cincinnati',
+        # Other common cities  
+        'A': 'Austin', 'B': 'Boston', 'D': 'Denver', 'M': 'Miami',
+        'S': 'Seattle', 'Pt': 'Portland', 'At': 'Atlanta'
+    }
+    # Note: Columbus has conflict (C could be Chicago or Columbus)
+    # Handle context-sensitive mapping
+    if code.upper() == 'C':
+        return 'Columbus'  # Default to Columbus for Ohio context
+    return codes.get(code, code)

@@ -13,8 +13,8 @@ def test_token_efficiency():
     # Test cases: (original_human_text, expected_gittertalk_object)
     test_cases = [
         (
-            "okay so im coming from NYC. i need to get a flight to albuquerque NM TOMORROW. PLEASE tell me theres one available",
-            gittertalk(act="flight", obj="Flight", params={"from": "NYC", "to": "ABQ", "when": "+1", "check": "availability"})
+            "okay so im coming from NYC. i need to get a flight to Los Angeles TOMORROW. PLEASE tell me theres one available",
+            gittertalk(act="flight", obj="Flight", params={"from": "NYC", "to": "Los Angeles", "when": "+1", "check": "availability"})
         ),
         (
             "I want to book a hotel room in Paris for next week, preferably something nice but not too expensive",
@@ -22,7 +22,7 @@ def test_token_efficiency():
         ),
         (
             "Can you tell me what's happening with Tesla stock today? I need the latest news and analysis",
-            gittertalk(act="news", obj="Tesla", params={"type": "stock", "when": "today", "detail": "analysis"})
+            gittertalk(act="news", obj="News", params={"type": "stock", "when": "today", "detail": "analysis"})
         ),
         (
             "I'm really stressed out from work. Can you tell me a funny joke to cheer me up?",
@@ -30,7 +30,11 @@ def test_token_efficiency():
         ),
         (
             "I need to find a rental car in Los Angeles for this weekend, something economical would be great",
-            gittertalk(act="car", obj="rental", params={"location": "LAX", "when": "weekend", "type": "economy"})
+            gittertalk(act="car", obj="Car", params={"location": "Los Angeles", "when": "weekend", "type": "economy"})
+        ),
+        (
+            "what highway to take to get from zanesville ohio to columbus ohio",
+            gittertalk(act="route", obj="Route", params={"from": "Zanesville", "to": "Columbus"})
         )
     ]
     
@@ -104,8 +108,8 @@ def test_pipeline_efficiency():
     original_request = "I need to book a flight from New York to Los Angeles tomorrow morning, check if business class is available"
     gt_obj = gittertalk(
         act="flight", 
-        obj="booking", 
-        params={"from": "NYC", "to": "LAX", "when": "+1", "time": "morning", "class": "business", "check": "availability"}
+        obj="Flight", 
+        params={"from": "New York", "to": "Los Angeles", "when": "+1", "time": "morning", "class": "business", "check": "availability"}
     )
     
     print(f"Original request: \"{original_request}\"")

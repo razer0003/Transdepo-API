@@ -71,30 +71,35 @@ async def handle_department(department: str, gittertalk_obj: "gittertalk", fallb
         gittertalk_obj: The parsed gittertalk object
         fallback_mode: "adaptive" (creates new dept) or "strict" (refuses unknown depts)
     """
-    # Add gittertalk expansion for level 4 before processing
-    if is_ultra_compressed(gittertalk_obj):
-        expanded_gittertalk = expand_compressed_format(gittertalk_obj)
-        # Process with expanded version for better AI comprehension
-        result = await process_with_expanded_context(department, expanded_gittertalk, gittertalk_obj)
-    else:
-        result = await standard_processing(department, gittertalk_obj)
-    
-    return result
-
-def expand_compressed_format(compressed):
-    # Convert "f:CMH>AUS+1" to "flight from Columbus,Ohio to Austin,Texas for 1 person"
-    # This helps the AI understand the ultra-compressed format
-    pass
+    # Route to the appropriate department based on the department name
+    try:
+        if department == "travel":
+            return await travel_department(gittertalk_obj)
+        elif department == "news":
+            return await news_department(gittertalk_obj)
+        elif department == "joke":
+            return await joke_department(gittertalk_obj)
+        elif fallback_mode == "adaptive":
+            return await adaptive_fallback_department(gittertalk_obj, department)
+        else:  # strict mode
+            available_departments = ["travel", "news", "joke"]
+            return await strict_fallback_department(department, available_departments)
+    except Exception as e:
+        # Fallback to generic department if there's an error
+        return await generic_department(gittertalk_obj)
 
 async def travel_department(gittertalk_obj: "gittertalk") -> str:
-    # Extract user-friendly information from gittertalk
-    user_request = extract_user_intent(gittertalk_obj)
+    # Use the gittertalk object directly for token efficiency - don't expand back to natural language
+    from gittertalk import gittertalk_to_string
+    
+    # Get the compressed gittertalk string at the same level it was created
+    # This maintains the token efficiency benefit
+    gittertalk_str = gittertalk_to_string(gittertalk_obj, 2)  # Use level 2 as baseline for departments
     
     prompt = (
-        f"You are a Travel Assistant AI. Help the user with their travel-related request.\n"
-        f"User request: {user_request}\n"
-        "Provide helpful travel advice, booking suggestions, or next steps. "
-        "Be friendly and professional. Never mention technical terms or internal processing."
+        f"You are a Travel Assistant AI. Process this travel request: {gittertalk_str}\n"
+        "Interpret the compact request format and provide helpful travel advice or booking suggestions. "
+        "Be friendly and professional."
     )
     response = client.chat.completions.create(
         model=MODEL_DEPARTMENT,
@@ -105,14 +110,15 @@ async def travel_department(gittertalk_obj: "gittertalk") -> str:
     return response.choices[0].message.content.strip()
 
 async def news_department(gittertalk_obj: "gittertalk") -> str:
-    # Extract user-friendly information from gittertalk
-    user_request = extract_user_intent(gittertalk_obj)
+    # Use the gittertalk object directly for token efficiency
+    from gittertalk import gittertalk_to_string
+    
+    gittertalk_str = gittertalk_to_string(gittertalk_obj, 2)
     
     prompt = (
-        f"You are a News Assistant AI. Help the user with their news and information request.\n"
-        f"User request: {user_request}\n"
-        "Provide helpful news updates, information, or analysis as requested. "
-        "Be informative and helpful. Never mention technical terms or internal processing."
+        f"You are a News Assistant AI. Process this news request: {gittertalk_str}\n"
+        "Interpret the compact request format and provide news updates or information. "
+        "Be informative and helpful."
     )
     response = client.chat.completions.create(
         model=MODEL_DEPARTMENT,
@@ -123,14 +129,15 @@ async def news_department(gittertalk_obj: "gittertalk") -> str:
     return response.choices[0].message.content.strip()
 
 async def joke_department(gittertalk_obj: "gittertalk") -> str:
-    # Extract user-friendly information from gittertalk
-    user_request = extract_user_intent(gittertalk_obj)
+    # Use the gittertalk object directly for token efficiency  
+    from gittertalk import gittertalk_to_string
+    
+    gittertalk_str = gittertalk_to_string(gittertalk_obj, 2)
     
     prompt = (
-        f"You are a Comedy Assistant AI. Help the user with their joke or entertainment request.\n"
-        f"User request: {user_request}\n"
-        "Tell jokes, provide humor, or entertain as requested. "
-        "Be funny and engaging. Never mention technical terms or internal processing."
+        f"You are a Comedy Assistant AI. Process this entertainment request: {gittertalk_str}\n"
+        "Interpret the compact request format and provide humor or entertainment. "
+        "Be funny and engaging."
     )
     response = client.chat.completions.create(
         model=MODEL_DEPARTMENT,
@@ -143,16 +150,16 @@ async def joke_department(gittertalk_obj: "gittertalk") -> str:
 async def adaptive_fallback_department(gittertalk_obj: "gittertalk", department: str) -> str:
     """
     Adaptive fallback: Creates a new department on the spot to handle the request.
-    This is the original behavior - acts as a generic AI that adapts to any request.
+    Uses compressed gittertalk format to maintain token efficiency.
     """
-    # Extract user-friendly information from gittertalk
-    user_request = extract_user_intent(gittertalk_obj)
+    from gittertalk import gittertalk_to_string
+    
+    gittertalk_str = gittertalk_to_string(gittertalk_obj, 2)
     
     prompt = (
-        f"You are a {department.title()} Assistant AI. Help the user with their request.\n"
-        f"User request: {user_request}\n"
-        f"Respond as a specialist in {department}-related topics. "
-        "Be helpful and professional. Never mention technical terms or internal processing."
+        f"You are a {department.title()} Assistant AI. Process this request: {gittertalk_str}\n"
+        f"Interpret the compact request format as a specialist in {department}-related topics. "
+        "Be helpful and professional."
     )
     response = client.chat.completions.create(
         model=MODEL_DEPARTMENT,
@@ -177,13 +184,13 @@ async def strict_fallback_department(requested_department: str, available_depart
     )
 
 async def generic_department(gittertalk_obj: "gittertalk") -> str:
-    # Extract user-friendly information from gittertalk
-    user_request = extract_user_intent(gittertalk_obj)
+    from gittertalk import gittertalk_to_string
+    
+    gittertalk_str = gittertalk_to_string(gittertalk_obj, 2)
     
     prompt = (
-        f"You are a General Assistant AI. Help the user with their request.\n"
-        f"User request: {user_request}\n"
-        "Provide helpful assistance. Never mention technical terms or internal processing."
+        f"You are a General Assistant AI. Process this request: {gittertalk_str}\n"
+        "Interpret the compact request format and provide helpful assistance."
     )
     response = client.chat.completions.create(
         model=MODEL_DEPARTMENT,

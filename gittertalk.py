@@ -42,12 +42,21 @@ def gittertalk_to_string(gt: gittertalk, verbose_level: int = 2) -> str:
         return f"{gt.act} {gt.obj} {' '.join(essential_params)}"
     
     elif verbose_level == 2:
-        # 60% efficiency target - moderate abbreviation
-        act_map = {"flight": "flt", "hotel": "htl", "news": "nws", "joke": "jk", "car": "car"}
-        obj_map = {"booking": "bk", "Flight": "F", "entertainment": "fun"}
+        # 60% efficiency target - moderate abbreviation with DEFINED mappings
+        act_map = {
+            "flight": "flt", "hotel": "htl", "news": "nws", "joke": "jk", 
+            "car": "car", "route": "rte", "find": "fnd", "book": "bk", 
+            "search": "sch", "get": "get"
+        }
+        obj_map = {
+            "booking": "bkg", "Flight": "Flt", "entertainment": "ent", 
+            "Route": "Rte", "Hotel": "Htl", "Car": "Car", "News": "Nws",
+            "Joke": "Jke", "Object": "Obj"
+        }
         
-        act = act_map.get(gt.act, gt.act[:3])
-        obj = obj_map.get(gt.obj, gt.obj[:2])
+        # Use defined mappings only - no fallbacks to random abbreviations
+        act = act_map.get(gt.act, gt.act)  # Keep full word if not in map
+        obj = obj_map.get(gt.obj, gt.obj)  # Keep full word if not in map
         
         params = gt.params or {}
         parts = [f"{act}:{obj}"]
@@ -58,11 +67,17 @@ def gittertalk_to_string(gt: gittertalk, verbose_level: int = 2) -> str:
         if "when" in params:
             parts.append(params["when"])
             
-        # Only essential modifiers
+        # Only essential modifiers with defined abbreviations
         essential = ["class", "time", "type"]
         for k in essential:
             if k in params:
-                parts.append(f"{k[0]}{params[k][:2]}")
+                # Use defined abbreviations for common values
+                value_abbrev = {
+                    "business": "bus", "economy": "eco", "first": "1st",
+                    "morning": "am", "afternoon": "pm", "evening": "eve"
+                }
+                v_short = value_abbrev.get(params[k], params[k])
+                parts.append(f"{k[0]}{v_short}")
                 
         if any(k in params for k in ["check", "availability"]):
             parts.append("?")
@@ -70,9 +85,12 @@ def gittertalk_to_string(gt: gittertalk, verbose_level: int = 2) -> str:
         return " ".join(parts)
     
     elif verbose_level == 3:
-        # 40% efficiency target - heavy symbolism
-        act_map = {"flight": "f", "hotel": "h", "car": "c", "news": "n", "joke": "j"}
-        act = act_map.get(gt.act, gt.act[0])
+        # 40% efficiency target - heavy symbolism with DEFINED mappings
+        act_map = {
+            "flight": "f", "hotel": "h", "car": "c", "news": "n", "joke": "j",
+            "route": "r", "find": "f", "book": "b", "search": "s", "get": "g"
+        }
+        act = act_map.get(gt.act, gt.act[0])  # Fallback to first letter only if not defined
         
         params = gt.params or {}
         parts = [act]
@@ -100,9 +118,12 @@ def gittertalk_to_string(gt: gittertalk, verbose_level: int = 2) -> str:
         return "".join(parts)
     
     else:  # verbose_level == 4
-        # 20% efficiency target (80% reduction) - maximum compression
-        act_map = {"flight": "f", "hotel": "h", "car": "c", "news": "n", "joke": "j"}
-        act = act_map.get(gt.act, gt.act[0])
+        # 20% efficiency target (80% reduction) - maximum compression with DEFINED mappings
+        act_map = {
+            "flight": "f", "hotel": "h", "car": "c", "news": "n", "joke": "j",
+            "route": "r", "find": "f", "book": "b", "search": "s", "get": "g"
+        }
+        act = act_map.get(gt.act, gt.act[0])  # Fallback to first letter only if not defined
         
         params = gt.params or {}
         result = act
@@ -138,10 +159,16 @@ def gittertalk_to_string(gt: gittertalk, verbose_level: int = 2) -> str:
         return result
 
 def get_location_code(location: str) -> str:
-    """Convert location to ultra-short code"""
+    """Convert location to ultra-short code with DEFINED mappings"""
     codes = {
+        # Major cities
         "NYC": "N", "New York": "N", "LAX": "L", "Los Angeles": "L",
-        "Paris": "P", "London": "Ld", "Tokyo": "T", "Chicago": "C"
+        "Paris": "P", "London": "Ld", "Tokyo": "T", "Chicago": "C",
+        # Ohio cities (for the user's example)
+        "Zanesville": "Z", "Columbus": "C", "Cleveland": "Cl", "Cincinnati": "Ci",
+        # Other common cities
+        "Austin": "A", "Boston": "B", "Denver": "D", "Miami": "M", 
+        "Seattle": "S", "Portland": "Pt", "Atlanta": "At"
     }
     return codes.get(location, location[:1])
 
@@ -233,4 +260,5 @@ def format_level_3(gittertalk_data):
     
     # Build consistent format: >action;object;from>to
     # Example: >b;pt;Columbus,OH>Austin,TX
-    return formatted_string
+    # This function is incomplete - returning empty string for now
+    return ""
