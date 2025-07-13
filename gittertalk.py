@@ -10,58 +10,140 @@ def gittertalk_to_string(gt: gittertalk, verbose_level: int = 2) -> str:
     """
     Converts gittertalk object to a compact string representation.
     Output format depends on verbose_level:
-    1: Traditional format (act:action;obj:object;param:value)
-    2: Readable abbreviated format  
-    3: Symbolic abbreviated format
-    4: Ultra-minimal symbolic format
+    1: Structured but concise format
+    2: Abbreviated format (60% efficiency target)  
+    3: Symbolic format (40% efficiency target)
+    4: Ultra-minimal format (20% efficiency target = 80% reduction)
     """
     if verbose_level == 1:
-        # Traditional format
-        base = f"act:{gt.act};obj:{gt.obj}"
+        # Structured but concise - remove redundant words
         params = gt.params or {}
+        essential_params = []
+        
+        # Only include essential parameters, use shortest form
+        if "from" in params and "to" in params:
+            essential_params.append(f"{params['from']}-{params['to']}")
+        elif "from" in params:
+            essential_params.append(f"from:{params['from']}")
+        elif "to" in params:
+            essential_params.append(f"to:{params['to']}")
+            
+        if "when" in params:
+            essential_params.append(params["when"])
+            
+        # Add other critical params
         for k, v in params.items():
-            base += f";{k}:{v}"
-        return base
+            if k not in ["from", "to", "when"] and k in ["class", "time", "type"]:
+                essential_params.append(f"{k[0]}{v}")
+        
+        if "check" in params:
+            essential_params.append("?")
+            
+        return f"{gt.act} {gt.obj} {' '.join(essential_params)}"
     
     elif verbose_level == 2:
-        # Readable abbreviated format - more aggressive abbreviation
-        action_abbrev = {"flight": "flt", "hotel": "htl", "news": "nws", "joke": "jke", "car": "car", "book": "bk"}
-        obj_abbrev = {"Flight": "F", "Hotel": "H", "News": "N", "booking": "bk", "entertainment": "ent"}
+        # 60% efficiency target - moderate abbreviation
+        act_map = {"flight": "flt", "hotel": "htl", "news": "nws", "joke": "jk", "car": "car"}
+        obj_map = {"booking": "bk", "Flight": "F", "entertainment": "fun"}
         
-        act = action_abbrev.get(gt.act, gt.act[:3])
-        obj = obj_abbrev.get(gt.obj, gt.obj[:2])
+        act = act_map.get(gt.act, gt.act[:3])
+        obj = obj_map.get(gt.obj, gt.obj[:2])
         
-        base = f"{act}:{obj}"
         params = gt.params or {}
-        for k, v in params.items():
-            key_abbrev = {"from": "fr", "to": "to", "when": "wn", "check": "ck", "location": "loc", "type": "ty"}
-            k_short = key_abbrev.get(k, k[:2])
-            base += f";{k_short}:{v}"
-        return base
+        parts = [f"{act}:{obj}"]
+        
+        if "from" in params and "to" in params:
+            parts.append(f"{params['from']}-{params['to']}")
+        
+        if "when" in params:
+            parts.append(params["when"])
+            
+        # Only essential modifiers
+        essential = ["class", "time", "type"]
+        for k in essential:
+            if k in params:
+                parts.append(f"{k[0]}{params[k][:2]}")
+                
+        if any(k in params for k in ["check", "availability"]):
+            parts.append("?")
+            
+        return " ".join(parts)
     
     elif verbose_level == 3:
-        # Symbolic abbreviated format
-        action_map = {
-            'flight': 'f', 'hotel': 'h', 'car': 'c', 'news': 'n',
-            'joke': 'j', 'translate': 't', 'book': 'b', 'reserve': 'r'
-        }
+        # 40% efficiency target - heavy symbolism
+        act_map = {"flight": "f", "hotel": "h", "car": "c", "news": "n", "joke": "j"}
+        act = act_map.get(gt.act, gt.act[0])
         
-        act_short = action_map.get(gt.act.lower(), gt.act[0])
-        param_str = build_symbolic_params(gt.params, level=3)
+        params = gt.params or {}
+        parts = [act]
         
-        return f"{act_short}:{param_str}" if param_str else act_short
+        # Route with >
+        if "from" in params and "to" in params:
+            parts.append(f"{params['from'][:3]}>{params['to'][:3]}")
+        
+        # Time shorthand
+        if "when" in params:
+            when = params["when"]
+            if when.startswith('+'):
+                parts.append(when)
+            else:
+                time_map = {"tomorrow": "+1", "today": "0", "morning": "am"}
+                parts.append(time_map.get(when, when[:2]))
+        
+        # Quick modifiers
+        if "class" in params:
+            parts.append(f"c{params['class'][:1]}")
+            
+        if any(k in params for k in ["check", "availability"]):
+            parts.append("?")
+            
+        return "".join(parts)
     
     else:  # verbose_level == 4
-        # Ultra-minimal symbolic format - maximum compression
-        action_map = {
-            'flight': 'f', 'hotel': 'h', 'car': 'c', 'news': 'n',
-            'joke': 'j', 'translate': 't', 'book': 'b', 'reserve': 'r'
-        }
+        # 20% efficiency target (80% reduction) - maximum compression
+        act_map = {"flight": "f", "hotel": "h", "car": "c", "news": "n", "joke": "j"}
+        act = act_map.get(gt.act, gt.act[0])
         
-        act_short = action_map.get(gt.act.lower(), gt.act[0] if gt.act else 'u')
-        param_str = build_symbolic_params(gt.params, level=4)
+        params = gt.params or {}
+        result = act
         
-        return f"{act_short}:{param_str}" if param_str else act_short
+        # Ultra-compact route
+        if "from" in params and "to" in params:
+            # Use airport codes or abbreviations
+            from_code = get_location_code(params["from"])
+            to_code = get_location_code(params["to"])
+            result += f"{from_code}{to_code}"
+        
+        # Time as single char/digit
+        if "when" in params:
+            when = params["when"]
+            if when == "+1" or "tomorrow" in when:
+                result += "1"
+            elif when == "+0" or "today" in when:
+                result += "0"
+            elif "morning" in when:
+                result += "m"
+            else:
+                result += when[0] if when else ""
+        
+        # Class as single letter
+        if "class" in params:
+            class_map = {"business": "b", "economy": "e", "first": "f"}
+            result += class_map.get(params["class"], params["class"][0])
+        
+        # Check availability
+        if any(k in params for k in ["check", "availability"]):
+            result += "?"
+            
+        return result
+
+def get_location_code(location: str) -> str:
+    """Convert location to ultra-short code"""
+    codes = {
+        "NYC": "N", "New York": "N", "LAX": "L", "Los Angeles": "L",
+        "Paris": "P", "London": "Ld", "Tokyo": "T", "Chicago": "C"
+    }
+    return codes.get(location, location[:1])
 
 def build_symbolic_params(params: Dict[str, Any], level: int) -> str:
     """Build symbolic parameter string based on efficiency level"""

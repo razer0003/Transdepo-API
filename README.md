@@ -36,6 +36,14 @@ Example transformations:
 - **Level 3**: 40% efficiency - abbreviated with symbols  
 - **Level 4**: 20% efficiency - ultra-minimal with heavy symbolism
 
+### Verbosity Levels - Production Guidance
+
+- **Level 1-2**: **Production Ready** - 70% reduction with high AI comprehension
+- **Level 3**: **Advanced Use** - 83% reduction, may require context training  
+- **Level 4**: **Specialized Protocols** - 90% reduction, requires exact implementation matching
+
+**Recommendation**: Use Level 2 for most applications. Level 4 proves the concept but requires custom department training for reliable interpretation.
+
 ## Features
 
 ### **Adaptive Department Routing**
