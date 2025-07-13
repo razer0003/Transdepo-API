@@ -120,3 +120,27 @@ def build_symbolic_params(params: Dict[str, Any], level: int) -> str:
                 parts.append(f"{k}:{v}")
     
     return "".join(parts) if level == 4 else ";".join(parts)
+
+def format_level_3(gittertalk_data):
+    # Use consistent abbreviation patterns
+    # Example: act:book → >b, obj:plane ticket → obj:pt, etc.
+    formatted = []
+    
+    # Standardize common actions
+    action_abbrev = {
+        "book": "b",
+        "search": "s", 
+        "find": "f",
+        "get": "g"
+    }
+    
+    # Standardize common objects
+    object_abbrev = {
+        "plane ticket": "pt",
+        "flight": "fl",
+        "hotel": "ht"
+    }
+    
+    # Build consistent format: >action;object;from>to
+    # Example: >b;pt;Columbus,OH>Austin,TX
+    return formatted_string

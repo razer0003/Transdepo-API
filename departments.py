@@ -71,21 +71,20 @@ async def handle_department(department: str, gittertalk_obj: "gittertalk", fallb
         gittertalk_obj: The parsed gittertalk object
         fallback_mode: "adaptive" (creates new dept) or "strict" (refuses unknown depts)
     """
-    # List of available departments
-    available_departments = ["travel", "news", "joke"]
-    
-    if department == "travel":
-        return await travel_department(gittertalk_obj)
-    elif department == "news":
-        return await news_department(gittertalk_obj)
-    elif department == "joke":
-        return await joke_department(gittertalk_obj)
+    # Add gittertalk expansion for level 4 before processing
+    if is_ultra_compressed(gittertalk_obj):
+        expanded_gittertalk = expand_compressed_format(gittertalk_obj)
+        # Process with expanded version for better AI comprehension
+        result = await process_with_expanded_context(department, expanded_gittertalk, gittertalk_obj)
     else:
-        # Handle fallback based on mode
-        if fallback_mode == "strict":
-            return await strict_fallback_department(department, available_departments)
-        else:  # fallback_mode == "adaptive" (default)
-            return await adaptive_fallback_department(gittertalk_obj, department)
+        result = await standard_processing(department, gittertalk_obj)
+    
+    return result
+
+def expand_compressed_format(compressed):
+    # Convert "f:CMH>AUS+1" to "flight from Columbus,Ohio to Austin,Texas for 1 person"
+    # This helps the AI understand the ultra-compressed format
+    pass
 
 async def travel_department(gittertalk_obj: "gittertalk") -> str:
     # Extract user-friendly information from gittertalk
