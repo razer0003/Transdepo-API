@@ -14,7 +14,7 @@ async def test_workflow():
     print("Testing Workflow with different verbose levels:")
     print("=" * 60)
     
-    for level in [2, 3, 4]:
+    for level in [1, 2, 4]:  # Updated to test only supported levels
         print(f"\nVerbose Level {level}:")
         print("-" * 30)
         
@@ -44,18 +44,18 @@ if __name__ == "__main__":
     # Test just the parsing logic without API calls
     from gittertalk import gittertalk
     
-    # Test Level 3 parsing
-    print("Testing Level 3 parsing:")
-    test_gt_3 = gittertalk(act="route", obj="Route", params={"from": "Zanesville", "to": "Columbus"})
-    level_3_str = gittertalk_to_string(test_gt_3, 3)
-    print(f"Level 3 output: '{level_3_str}'")
+    # Test Level 2 parsing
+    print("Testing Level 2 parsing:")
+    test_gt_2 = gittertalk(act="route", obj="directions", params={"from": "Zanesville", "to": "Columbus"})
+    level_2_str = gittertalk_to_string(test_gt_2, 2)
+    print(f"Level 2 output: '{level_2_str}'")
     
     # Test Level 4 parsing  
     print("\nTesting Level 4 parsing:")
-    test_gt_4 = gittertalk(act="route", obj="Route", params={"from": "Zanesville", "to": "Columbus"})
+    test_gt_4 = gittertalk(act="route", obj="directions", params={"from": "Zanesville", "to": "Columbus"})
     level_4_str = gittertalk_to_string(test_gt_4, 4)
     print(f"Level 4 output: '{level_4_str}'")
     
     print("\n" + "=" * 60)
     print("If you want to test the full workflow, run the FastAPI server")
-    print("and make a POST request to /process with verbose=3 or verbose=4")
+    print("and make a POST request to /process with verbose=1, verbose=2, or verbose=4")
