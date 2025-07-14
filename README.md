@@ -26,23 +26,21 @@ Gittertalk is a structured intermediate language that bridges human intent and A
 ```
 Example transformations:
 "Book a flight from NYC to LA" → act:flight;obj:booking;from:NYC;to:LA;when:+0
-"Tell me about Tesla stock" → act:news;obj:tesla;type:stock
-"Make me laugh" → act:joke;obj:random
+"Tell me about Tesla stock" → act:news;obj:information;type:stock;company:Tesla
+"Make me laugh" → act:joke;obj:entertainment;mood:random
 ```
 
 ### Verbosity Levels
-- **Level 1**: Current format - full descriptive gittertalk
-- **Level 2**: 60% efficiency - structured but readable (default)
-- **Level 3**: 40% efficiency - abbreviated with symbols  
-- **Level 4**: 20% efficiency - ultra-minimal with heavy symbolism
+- **Level 1**: Full format - complete descriptive gittertalk with no abbreviations
+- **Level 2**: Abbreviated format - simple abbreviations and readable compression (default)
+- **Level 4**: Stenographic format - contextual compression with stenographic markers
 
 ### Verbosity Levels - Production Guidance
 
-- **Level 1-2**: **Production Ready** - 70% reduction with high AI comprehension
-- **Level 3**: **Advanced Use** - 83% reduction, may require context training  
-- **Level 4**: **Specialized Protocols** - 90% reduction, requires exact implementation matching
+- **Level 1-2**: **Production Ready** - Clear, parseable formats with high AI comprehension
+- **Level 4**: **Advanced Use** - Stenographic compression for specialized applications requiring maximum efficiency
 
-**Recommendation**: Use Level 2 for most applications. Level 4 proves the concept but requires custom department training for reliable interpretation.
+**Recommendation**: Use Level 2 for most applications. Level 4 provides maximum compression but requires understanding of stenographic markers.
 
 ## Features
 

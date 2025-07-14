@@ -11,14 +11,25 @@ app = FastAPI()
 class HumanRequest(BaseModel):
     request: str
     fallback_mode: Optional[str] = "adaptive"  # "adaptive" or "strict"
-    verbose: Optional[int] = 2  # 1=current, 2=60%, 3=40%, 4=20% (default: level 2)
+    verbose: Optional[int] = 2  # 1=full format, 2=abbreviated, 4=stenographic (default: level 2)
 
 @app.post("/process")
 async def process_request(human: HumanRequest):
+    # Validate verbose level - only 1, 2, and 4 are supported
+    verbose_level = human.verbose or 2
+    if verbose_level not in [1, 2, 4]:
+        return {
+            "error": "Invalid verbose level. Only levels 1, 2, and 4 are supported.",
+            "supported_levels": {
+                "1": "Full format with no abbreviations", 
+                "2": "Abbreviated format with simple mappings",
+                "4": "Stenographic compression with context markers"
+            }
+        }
+    
     # 1. Feeder step: Human → Structured
     structured = await feeder_process(human.request)
     # 2. Interpreter step: Structured → gittertalk (+ department)
-    verbose_level = human.verbose or 2
     fallback_mode = human.fallback_mode or "adaptive"
     gittertalk, department = await interpreter_process(structured, verbose_level)
     # 3. Department step: gittertalk → Final response
@@ -52,15 +63,14 @@ async def api_info():
             "strict": "Only handles requests for existing departments"
         },
         "verbose_levels": {
-            "1": "Current format - full descriptive gittertalk",
-            "2": "60% efficiency - structured but readable (default)",
-            "3": "40% efficiency - abbreviated with symbols",
-            "4": "20% efficiency - ultra-minimal with heavy symbolism"
+            "1": "Full format - complete descriptive gittertalk with no abbreviations",
+            "2": "Abbreviated format - simple abbreviations and readable compression (default)",
+            "4": "Stenographic format - contextual compression with stenographic markers"
         },
         "request_format": {
             "request": "string (required) - Your request text",
             "fallback_mode": "string (optional) - 'adaptive' or 'strict', defaults to 'adaptive'",
-            "verbose": "integer (optional) - 1-4, gittertalk efficiency level, defaults to 2"
+            "verbose": "integer (optional) - 1, 2, or 4, gittertalk efficiency level, defaults to 2"
         },
         "example_requests": [
             {
