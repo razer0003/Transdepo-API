@@ -5,7 +5,12 @@ from typing import TYPE_CHECKING, Tuple
 if TYPE_CHECKING:
     from gittertalk import gittertalk
 
-client = OpenAI(api_key=OPENAI_API_KEY)
+# Only initialize OpenAI client if API key is available
+client = None
+if OPENAI_API_KEY:
+    client = OpenAI(api_key=OPENAI_API_KEY)
+else:
+    print("Warning: OpenAI API key not found. The interpreter will not work without it.")
 
 async def interpreter_process(structured_prompt: str, verbose_level: int = 2) -> Tuple["gittertalk", str]:
     """
@@ -13,6 +18,9 @@ async def interpreter_process(structured_prompt: str, verbose_level: int = 2) ->
     verbose_level: 1=full format, 2=abbreviated, 4=stenographic
     """
     from gittertalk import gittertalk  # Import here to avoid circular import
+    
+    if not client:
+        raise ValueError("OpenAI client not initialized. Please set OPENAI_API_KEY environment variable.")
     
     # Use ONE consistent system prompt that always outputs the same format
     system_prompt = (

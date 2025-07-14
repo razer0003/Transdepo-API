@@ -16,7 +16,7 @@ class HumanRequest(BaseModel):
 @app.post("/process")
 async def process_request(human: HumanRequest):
     # Validate verbose level - only 1, 2, and 4 are supported
-    verbose_level = human.verbose or 2
+    verbose_level = human.verbose if human.verbose is not None else 2
     if verbose_level not in [1, 2, 4]:
         return {
             "error": "Invalid verbose level. Only levels 1, 2, and 4 are supported.",

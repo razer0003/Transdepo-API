@@ -5,7 +5,12 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from gittertalk import gittertalk
 
-client = OpenAI(api_key=OPENAI_API_KEY)
+# Only initialize OpenAI client if API key is available
+client = None
+if OPENAI_API_KEY:
+    client = OpenAI(api_key=OPENAI_API_KEY)
+else:
+    print("Warning: OpenAI API key not found. The departments will not work without it.")
 
 def extract_user_intent(gittertalk_obj: "gittertalk") -> str:
     """
@@ -71,6 +76,9 @@ async def handle_department(department: str, gittertalk_obj: "gittertalk", fallb
         gittertalk_obj: The parsed gittertalk object
         fallback_mode: "adaptive" (creates new dept) or "strict" (refuses unknown depts)
     """
+    if not client:
+        return "Error: OpenAI client not initialized. Please set OPENAI_API_KEY environment variable."
+        
     # Route to the appropriate department based on the department name
     try:
         if department == "travel":

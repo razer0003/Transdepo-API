@@ -1,12 +1,20 @@
 from openai import OpenAI
 from config import OPENAI_API_KEY, MODEL_FEEDER
 
-client = OpenAI(api_key=OPENAI_API_KEY)
+# Only initialize OpenAI client if API key is available
+client = None
+if OPENAI_API_KEY:
+    client = OpenAI(api_key=OPENAI_API_KEY)
+else:
+    print("Warning: OpenAI API key not found. The feeder will not work without it.")
 
 async def feeder_process(human_request: str) -> str:
     """
     Converts a raw human request to a structured prompt for the Interpreter.
     """
+    if not client:
+        raise ValueError("OpenAI client not initialized. Please set OPENAI_API_KEY environment variable.")
+        
     system_prompt = (
         "You are the Feeder AI. Your job is to extract intent, object, and key parameters from a human request, "
         "and output a structured summary suitable for further AI processing. "
